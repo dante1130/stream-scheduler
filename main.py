@@ -2,7 +2,7 @@
 
 import pendulum
 
-from googleapiclient.discovery import build
+from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import InstalledAppFlow
 
@@ -16,8 +16,22 @@ API_VERSION = "v3"
 
 def main():
 	youtube = get_authenticated_service()
+	
 	try:
-		schedule_broadcasts(youtube)
+		print("Scheduling broadcasts...")
+
+		schedule_broadcasts(youtube, [
+			Broadcast("Friday PM", pendulum.FRIDAY, 19, 30),
+			Broadcast("Saturday AM", pendulum.SATURDAY, 10, 00),
+			Broadcast("Saturday PM", pendulum.SATURDAY, 13, 30),
+		],
+		{
+			"kind": "youtube#liveBroadcast",
+			"status": {
+				"privacyStatus": "unlisted",
+				"selfDeclaredMadeForKids": True
+			}
+		})
 	except HttpError as e:
 		print("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
 
@@ -27,23 +41,7 @@ def get_authenticated_service():
 	credentials = flow.run_console()
 	return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
 
-def schedule_broadcasts(youtube):
-	print("Scheduling broadcast...")
-
-	broadcasts = [
-		Broadcast("Friday PM", pendulum.FRIDAY, 19, 30),
-		Broadcast("Saturday AM", pendulum.SATURDAY, 10, 00),
-		Broadcast("Saturday PM", pendulum.SATURDAY, 13, 30),
-	]
-
-	broadcast_body = {
-		"kind": "youtube#liveBroadcast",
-		"status": {
-			"privacyStatus": "unlisted",
-			"selfDeclaredMadeForKids": True
-		}
-	}
-
+def schedule_broadcasts(youtube: Resource, broadcasts: list[Broadcast], broadcast_body: dict):
 	for broadcast in broadcasts:
 		broadcast_body["snippet"] = {
 			"title": broadcast.title,
