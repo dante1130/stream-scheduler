@@ -16,7 +16,7 @@ API_VERSION = "v3"
 
 def main():
 	youtube = get_authenticated_service()
-	
+
 	try:
 		print("Scheduling broadcasts...")
 
@@ -36,7 +36,7 @@ def main():
 		print("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
 
 # Authorize the request and store authorization credentials.
-def get_authenticated_service():
+def get_authenticated_service() -> Resource:
 	flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
 	credentials = flow.run_console()
 	return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)

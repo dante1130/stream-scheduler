@@ -7,5 +7,5 @@ class Broadcast:
         self.hour = hour
         self.minute = minute
 
-    def get_start_time(self):
+    def get_start_time(self) -> str:
         return pendulum.now().next(self.day).set(hour=self.hour, minute=self.minute).to_iso8601_string()
