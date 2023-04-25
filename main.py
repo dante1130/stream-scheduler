@@ -1,19 +1,23 @@
 #!/usr/bin/python
 
+import pendulum
+
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import InstalledAppFlow
 
+from broadcast import Broadcast
+
 CLIENT_SECRETS_FILE = 'client_secret.json'
 
-SCOPES = ['https://www.googleapis.com/auth/youtube.readonly']
+SCOPES = ['https://www.googleapis.com/auth/youtube']
 API_SERVICE_NAME = 'youtube'
 API_VERSION = 'v3' 
 
 def main():
 	youtube = get_authenticated_service()
 	try:
-		list_streams(youtube)
+		schedule_broadcasts(youtube)
 	except HttpError as e:
 		print('An HTTP error %d occurred:\n%s' % (e.resp.status, e.content))
 
@@ -23,25 +27,37 @@ def get_authenticated_service():
 	credentials = flow.run_console()
 	return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
   
-# Retrieve a list of the liveStream resources associated with the currently
-# authenticated user's channel.
-def list_streams(youtube):
-	print('Live streams:')
+def schedule_broadcasts(youtube):
+	print('Scheduling broadcast...')
 
-	list_streams_request = youtube.liveStreams().list(
-		part='id,snippet',
-		mine=True,
-		maxResults=50
-	) 
+	broadcasts = [
+		Broadcast('Friday PM', pendulum.FRIDAY, 19, 30),
+		Broadcast('Saturday AM', pendulum.SATURDAY, 10, 00),
+		Broadcast('Saturday PM', pendulum.SATURDAY, 13, 30),
+	]
 
-	while list_streams_request:
-		list_streams_response = list_streams_request.execute()
+	broadcast_body = {
+		"kind": "youtube#liveBroadcast",
+		"status": {
+			"privacyStatus": "unlisted",
+			"selfDeclaredMadeForKids": True
+		}
+	}
 
-	for stream in list_streams_response.get('items', []):
-		print('%s (%s)' % (stream['snippet']['title'], stream['id']))
+	for broadcast in broadcasts:
+		broadcast_body["snippet"] = {
+			"title": broadcast.title,
+			"scheduledStartTime": broadcast.get_start_time(),
+		}
 
-	list_streams_request = youtube.liveStreams().list_next(
-		list_streams_request, list_streams_response)
+		schedule_broadcast_req = youtube.liveBroadcasts().insert(
+			part = "id,snippet,status",
+			body = broadcast_body
+		)
+
+		schedule_stream_resp = schedule_broadcast_req.execute()
+
+		print(schedule_stream_resp)
 
 if __name__ == '__main__':
 	main()

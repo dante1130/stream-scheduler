@@ -11,8 +11,8 @@ A simple stream scheduler for YouTube.
     - [Installing Python](#installing-python)
       - [Windows](#windows)
     - [Setting up virtualenv](#setting-up-virtualenv)
-    - [Installing Google API Libraries](#installing-google-api-libraries)
-  - [Running the Program](#running-the-program)
+    - [Installing Libraries](#installing-libraries)
+  - [Running the program](#running-the-program)
 
 ## Creating OAuth Credentials
 
@@ -29,7 +29,7 @@ A simple stream scheduler for YouTube.
 
 #### Windows
 
-Install Chocolatey by following the instructions [here](https://chocolatey.org/install).
+Install `Chocolatey` by following the instructions [here](https://chocolatey.org/install).
 
 Then run the following command in an elevated command prompt:
 
@@ -45,14 +45,14 @@ virtualenv venv
 venv\Scripts\activate
 ```
 
-### Installing Google API Libraries
+### Installing Libraries
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Running the Program
+## Running the program
 
 ```bash
-python main.py
+venv/Scripts/python main.py
 ```
