@@ -42,13 +42,13 @@ choco install python
 ```bash
 pip install virtualenv
 virtualenv venv
-venv\Scripts\activate
+venv/Scripts/activate # Use source venv/bin/activate on Linux
 ```
 
 ### Installing Libraries
 
 ```bash
-pip install -r requirements.txt
+venv/Scripts/pip install -r requirements.txt
 ```
 
 ## Running the program
