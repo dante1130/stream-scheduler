@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import json
 import pendulum
 
 from googleapiclient.discovery import build, Resource
@@ -19,8 +20,7 @@ def main():
 
 	try:
 		print("Scheduling broadcasts...")
-
-		schedule_broadcasts(youtube, [
+		broadcasts = schedule_broadcasts(youtube, [
 			Broadcast("Friday PM", pendulum.FRIDAY, 19, 30),
 			Broadcast("Saturday AM", pendulum.SATURDAY, 10, 00),
 			Broadcast("Saturday PM", pendulum.SATURDAY, 13, 30),
@@ -32,6 +32,15 @@ def main():
 				"selfDeclaredMadeForKids": True
 			}
 		})
+
+		print("Broadcasts scheduled successfully!")
+
+		print("Adding broadcasts to playlist...")
+
+		for broadcast in broadcasts:
+			insert_resource_to_playlist(youtube, "PL1JHys0-uCP0VR2TITGtd4TU7tGIQUA7F", broadcast["id"])
+
+		print("Broadcasts added to playlist successfully!")
 	except HttpError as e:
 		print("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
 
@@ -41,7 +50,32 @@ def get_authenticated_service() -> Resource:
 	credentials = flow.run_console()
 	return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
 
-def schedule_broadcasts(youtube: Resource, broadcasts: list[Broadcast], broadcast_body: dict):
+def list_playlists(youtube: Resource):
+	request = youtube.playlistItems().list(
+		part = "id,contentDetails,snippet",
+		playlistId = "PL1JHys0-uCP0VR2TITGtd4TU7tGIQUA7F"
+	)
+	response = request.execute()
+
+	print(json.dumps(response, indent = 4))
+
+def insert_resource_to_playlist(youtube: Resource, playlist_id: str, resource_id: str):
+	request = youtube.playlistItems().insert(
+		part = "id,contentDetails,snippet,status",
+		body = {
+			"snippet": {
+				"playlistId": playlist_id,
+				"resourceId": resource_id
+			}
+		}
+	)
+	response = request.execute()
+
+	print(json.dumps(response, indent = 4))
+
+def schedule_broadcasts(youtube: Resource, broadcasts: list[Broadcast], broadcast_body: dict) -> list[dict]:
+	scheduled_broadcasts: list[dict] = []
+
 	for broadcast in broadcasts:
 		broadcast_body["snippet"] = {
 			"title": broadcast.title,
@@ -55,7 +89,11 @@ def schedule_broadcasts(youtube: Resource, broadcasts: list[Broadcast], broadcas
 
 		schedule_stream_resp = schedule_broadcast_req.execute()
 
-		print(schedule_stream_resp)
+		scheduled_broadcasts.append(schedule_stream_resp)
+
+		print(json.dumps(schedule_stream_resp, indent = 4))
+
+	return scheduled_broadcasts
 
 if __name__ == "__main__":
 	main()
